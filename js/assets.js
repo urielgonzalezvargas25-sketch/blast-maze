@@ -6,7 +6,8 @@ class AssetsManager {
 
         this.sources = {
             enemy4: 'assets/images/enemy4.png',
-            bomb: 'assets/images/bomba.png'
+            bomb: 'assets/images/bomba.png',
+            player: 'assets/images/player.png'
         };
     }
 

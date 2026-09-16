@@ -145,48 +145,64 @@ class Player {
     draw(ctx) {
         if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 5) % 2 === 0) return;
 
-        const centerX = this.x + this.tileSize / 2;
-        const centerY = this.y + this.tileSize / 2;
+        const img = window.assetsManager ? window.assetsManager.get('player') : null;
 
-        // Sombra proyectada
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY + 12, 12, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
+        if (img) {
+            // Renderiza la imagen recortada del jugador
+            ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
 
-        // Cuerpo del Personaje (Gradiente brillante)
-        const grad = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, this.radius);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.3, '#00ffff');
-        grad.addColorStop(1, '#0088cc');
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Escudo
-        if (this.hasShield) {
-            ctx.strokeStyle = '#ff00ff';
-            ctx.lineWidth = 4;
-            ctx.shadowColor = '#ff00ff';
-            ctx.shadowBlur = 10;
+            // Mantiene el halo visual del escudo en caso de tener el PowerUp activo
+            if (this.hasShield) {
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.x + this.tileSize / 2, this.y + this.tileSize / 2, this.tileSize * 0.45, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         } else {
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+            const centerX = this.x + this.tileSize / 2;
+            const centerY = this.y + this.tileSize / 2;
+
+            // Sombra proyectada
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + 12, 12, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cuerpo del Personaje (Gradiente brillante)
+            const grad = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, this.radius);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.3, '#00ffff');
+            grad.addColorStop(1, '#0088cc');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Escudo
+            if (this.hasShield) {
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 4;
+                ctx.shadowColor = '#ff00ff';
+                ctx.shadowBlur = 10;
+            } else {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 0;
+            }
+            ctx.stroke();
             ctx.shadowBlur = 0;
+
+            // Ojos orientados según la dirección del movimiento
+            const eyeOffsetX = this.facingDir.x * 5;
+            const eyeOffsetY = this.facingDir.y * 5;
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(centerX - 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
+            ctx.arc(centerX + 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
         }
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Ojos orientados según la dirección del movimiento
-        const eyeOffsetX = this.facingDir.x * 5;
-        const eyeOffsetY = this.facingDir.y * 5;
-
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(centerX - 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
-        ctx.arc(centerX + 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
-        ctx.fill();
     }
 }
