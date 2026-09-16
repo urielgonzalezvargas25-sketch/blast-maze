@@ -5,9 +5,30 @@ class AssetsManager {
         this.totalImages = 0;
 
         this.sources = {
+            player: 'assets/images/player_spritesheet.png',
+            bomb1: 'assets/images/bomba.png',
+            bomb2: 'assets/images/bomba2.png',
+            bomb3: 'assets/images/bomba3.png',
             enemy4: 'assets/images/enemy4.png',
-            bomb: 'assets/images/bomba.png',
-            player: 'assets/images/player.png'
+            
+            enemy1_1: 'assets/images/enemy1_1.png',
+            enemy1_2: 'assets/images/enemy1_2.png',
+            enemy1_3: 'assets/images/enemy1_3.png',
+            enemy1_4: 'assets/images/enemy1_4.png',
+            enemy1_5: 'assets/images/enemy1_5.png',
+            enemy1_6: 'assets/images/enemy1_6.png',
+
+            enemy2_1: 'assets/images/enemy2_1.png',
+            enemy2_2: 'assets/images/enemy2_2.png',
+            enemy2_3: 'assets/images/enemy2_3.png',
+            enemy2_4: 'assets/images/enemy2_4.png',
+            enemy2_5: 'assets/images/enemy2_5.png',
+
+            enemy3_1: 'assets/images/enemy3_1.png',
+            enemy3_2: 'assets/images/enemy3_2.png',
+            enemy3_3: 'assets/images/enemy3_3.png',
+            enemy3_4: 'assets/images/enemy3_4.png',
+            enemy3_5: 'assets/images/enemy3_5.png',
         };
     }
 

@@ -13,7 +13,11 @@ class Player {
         this.bombRange = 2;
         this.hasShield = false;
         this.invulnerableTimer = 0;
-        this.facingDir = { x: 0, y: 1 }; // Dirección visual de la mirada
+        this.facingDir = { x: 0, y: 1 }; // Dirección visual inicial (Abajo)
+
+        // Variables para la animación del Spritesheet
+        this.isMoving = false;
+        this.animFrame = 0;
 
         this.keys = {};
         this.listenEvents();
@@ -60,10 +64,26 @@ class Player {
         let movingX = false;
         let movingY = false;
 
-        if (this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) { nextY -= this.speed; movingY = true; this.facingDir = { x: 0, y: -1 }; }
-        if (this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']) { nextY += this.speed; movingY = true; this.facingDir = { x: 0, y: 1 }; }
-        if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) { nextX -= this.speed; movingX = true; this.facingDir = { x: -1, y: 0 }; }
-        if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) { nextX += this.speed; movingX = true; this.facingDir = { x: 1, y: 0 }; }
+        this.isMoving = false;
+
+        if (this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) { 
+            nextY -= this.speed; movingY = true; this.facingDir = { x: 0, y: -1 }; this.isMoving = true; 
+        }
+        if (this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']) { 
+            nextY += this.speed; movingY = true; this.facingDir = { x: 0, y: 1 }; this.isMoving = true; 
+        }
+        if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) { 
+            nextX -= this.speed; movingX = true; this.facingDir = { x: -1, y: 0 }; this.isMoving = true; 
+        }
+        if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) { 
+            nextX += this.speed; movingX = true; this.facingDir = { x: 1, y: 0 }; this.isMoving = true; 
+        }
+
+        if (this.isMoving) {
+            this.animFrame++;
+        } else {
+            this.animFrame = 0; // Regresa al reposo si no se mueve
+        }
 
         const snapThreshold = 14;
 
@@ -148,10 +168,32 @@ class Player {
         const img = window.assetsManager ? window.assetsManager.get('player') : null;
 
         if (img) {
-            // Renderiza la imagen recortada del jugador
-            ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
+            const totalCols = 12;
+            const totalRows = 6;
+            const frameWidth = img.width / totalCols;
+            const frameHeight = img.height / totalRows;
 
-            // Mantiene el halo visual del escudo en caso de tener el PowerUp activo
+            // Mapeo de filas según la dirección de movimiento de tu spritesheet:
+            // Fila 0: Caminar Izquierda | Fila 1: Caminar Derecha | Fila 2: Caminar Atrás | Fila 3: Caminar Frente | Fila 5: Reposo
+            let row = 5; 
+            if (this.isMoving) {
+                if (this.facingDir.x === -1) row = 0;
+                else if (this.facingDir.x === 1) row = 1;
+                else if (this.facingDir.y === -1) row = 2;
+                else if (this.facingDir.y === 1) row = 3;
+            }
+
+            // Divisor en 8 para que la velocidad de transición de la animación sea suave y lenta
+            const col = Math.floor(this.animFrame / 8) % totalCols;
+
+            // Recorte y renderizado del frame actual
+            ctx.drawImage(
+                img,
+                col * frameWidth, row * frameHeight, frameWidth, frameHeight,
+                this.x, this.y, this.tileSize, this.tileSize
+            );
+
+            // Escudo activo
             if (this.hasShield) {
                 ctx.strokeStyle = '#ff00ff';
                 ctx.lineWidth = 3;
@@ -160,16 +202,15 @@ class Player {
                 ctx.stroke();
             }
         } else {
+            // Respaldo vectorial
             const centerX = this.x + this.tileSize / 2;
             const centerY = this.y + this.tileSize / 2;
 
-            // Sombra proyectada
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.beginPath();
             ctx.ellipse(centerX, centerY + 12, 12, 6, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Cuerpo del Personaje (Gradiente brillante)
             const grad = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, this.radius);
             grad.addColorStop(0, '#ffffff');
             grad.addColorStop(0.3, '#00ffff');
@@ -180,29 +221,14 @@ class Player {
             ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Escudo
             if (this.hasShield) {
                 ctx.strokeStyle = '#ff00ff';
                 ctx.lineWidth = 4;
-                ctx.shadowColor = '#ff00ff';
-                ctx.shadowBlur = 10;
             } else {
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 2;
-                ctx.shadowBlur = 0;
             }
             ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            // Ojos orientados según la dirección del movimiento
-            const eyeOffsetX = this.facingDir.x * 5;
-            const eyeOffsetY = this.facingDir.y * 5;
-
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.arc(centerX - 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
-            ctx.arc(centerX + 4 + eyeOffsetX, centerY - 2 + eyeOffsetY, 2.5, 0, Math.PI * 2);
-            ctx.fill();
         }
     }
 }

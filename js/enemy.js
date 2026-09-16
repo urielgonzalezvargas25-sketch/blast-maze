@@ -29,7 +29,6 @@ class Enemy {
 
         this.animFrame++;
 
-        // Al estar exactamente alineado con una celda, elige su siguiente destino
         if (this.x === this.targetC * this.tileSize && this.y === this.targetR * this.tileSize) {
             this.r = this.targetR;
             this.c = this.targetC;
@@ -50,7 +49,6 @@ class Enemy {
         const playerC = Math.floor((this.game.player.x + this.tileSize / 2) / this.tileSize);
 
         if (this.type === 1) {
-            // Enemigo 1: Movimiento Aleatorio
             const neighbors = this.getValidNeighbors(this.r, this.c);
             if (neighbors.length > 0) {
                 const next = neighbors[Math.floor(Math.random() * neighbors.length)];
@@ -58,21 +56,18 @@ class Enemy {
                 this.targetC = next.c;
             }
         } else if (this.type === 2) {
-            // Enemigo 2: Búsqueda a lo Ancho (BFS)
             this.path = this.findPathBFS(this.r, this.c, playerR, playerC);
             if (this.path.length > 1) {
                 this.targetR = this.path[1].r;
                 this.targetC = this.path[1].c;
             }
         } else if (this.type === 3) {
-            // Enemigo 3: Algoritmo A*
             this.path = this.findPathAStar(this.r, this.c, playerR, playerC);
             if (this.path.length > 1) {
                 this.targetR = this.path[1].r;
                 this.targetC = this.path[1].c;
             }
         } else if (this.type === 4) {
-            // Enemigo 4: Persecución Predictiva
             let predR = playerR;
             let predC = playerC;
             if (this.game.player.keys['ArrowUp'] || this.game.player.keys['w']) predR -= 3;
@@ -198,9 +193,15 @@ class Enemy {
     draw(ctx) {
         if (!this.alive) return;
 
-        // Si la imagen existe la renderiza; si no, utiliza la figura vectorial de respaldo
-        const imgKey = `enemy${this.type}`;
-        const img = window.assetsManager ? window.assetsManager.get(imgKey) : null;
+        // Define cuántos fotogramas tiene cada tipo de enemigo (Tipo 2 = 5 cuadros, Tipo 1 u otros = 6 cuadros)
+        // Define cuántos fotogramas tiene cada tipo de enemigo (Tipos 2 y 3 usan 5 cuadros; Tipo 1 usa 6)
+const maxFrames = (this.type === 2 || this.type === 3) ? 5 : 6;
+        const frameIndex = (Math.floor(this.animFrame / 15) % maxFrames) + 1;
+        
+        const imgKey = `enemy${this.type}_${frameIndex}`;
+        const fallbackKey = `enemy${this.type}`;
+        
+        const img = window.assetsManager ? (window.assetsManager.get(imgKey) || window.assetsManager.get(fallbackKey)) : null;
 
         if (img) {
             ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
@@ -216,42 +217,6 @@ class Enemy {
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.stroke();
-
-            ctx.fillStyle = '#ffffff';
-            if (this.type === 1) { 
-                const eyeOffset = (Math.floor(this.animFrame / 15) % 2 === 0) ? 1 : 0;
-                ctx.beginPath();
-                ctx.arc(centerX - 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
-                ctx.arc(centerX + 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (this.type === 2) { 
-                ctx.beginPath();
-                ctx.arc(centerX, centerY - 2, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ff0000';
-                ctx.beginPath();
-                ctx.arc(centerX, centerY - 2, 3, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (this.type === 3) { 
-                ctx.fillRect(centerX - 8, centerY - 4, 16, 4);
-            } else if (this.type === 4) { 
-                ctx.fillStyle = '#ff6b35';
-                ctx.beginPath();
-                ctx.moveTo(centerX - 8, centerY - 8);
-                ctx.lineTo(centerX - 4, centerY - 14);
-                ctx.lineTo(centerX - 2, centerY - 8);
-                ctx.moveTo(centerX + 8, centerY - 8);
-                ctx.lineTo(centerX + 4, centerY - 14);
-                ctx.lineTo(centerX + 2, centerY - 8);
-                ctx.fill();
-
-                ctx.fillStyle = '#ffff00';
-                ctx.beginPath();
-                ctx.arc(centerX - 4, centerY - 2, 2.5, 0, Math.PI * 2);
-                ctx.arc(centerX + 4, centerY - 2, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 10px monospace';
             ctx.textAlign = 'center';

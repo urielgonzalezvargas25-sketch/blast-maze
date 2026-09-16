@@ -35,7 +35,9 @@ class Bomb {
     draw(ctx) {
         if (this.exploded) return;
 
-        const img = window.assetsManager ? window.assetsManager.get('bomb') : null;
+        // Cambia de imagen cada 10 cuadros ejecutando un bucle del 1 al 3
+        const frameIndex = (Math.floor(this.animFrame / 10) % 3) + 1;
+        const img = window.assetsManager ? window.assetsManager.get(`bomb${frameIndex}`) : null;
 
         if (img) {
             ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
