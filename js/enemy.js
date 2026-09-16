@@ -198,65 +198,64 @@ class Enemy {
     draw(ctx) {
         if (!this.alive) return;
 
-        const centerX = this.x + this.tileSize / 2;
-        const centerY = this.y + this.tileSize / 2;
-        const radius = this.tileSize * 0.35;
+        // Si la imagen existe la renderiza; si no, utiliza la figura vectorial de respaldo
+        const imgKey = `enemy${this.type}`;
+        const img = window.assetsManager ? window.assetsManager.get(imgKey) : null;
 
-        // Cuerpo base
-        ctx.fillStyle = this.colors[this.type];
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (img) {
+            ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
+        } else {
+            const centerX = this.x + this.tileSize / 2;
+            const centerY = this.y + this.tileSize / 2;
+            const radius = this.tileSize * 0.35;
 
-        // Diseños vectoriales según el tipo de enemigo
-        ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = this.colors[this.type];
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-        if (this.type === 1) { 
-            // Fantasma: 2 Ojos parpadeantes
-            const eyeOffset = (Math.floor(this.animFrame / 15) % 2 === 0) ? 1 : 0;
-            ctx.beginPath();
-            ctx.arc(centerX - 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
-            ctx.arc(centerX + 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.type === 2) { 
-            // Cíclope (BFS): Ojo gigante central con pupila roja
-            ctx.beginPath();
-            ctx.arc(centerX, centerY - 2, 6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(centerX, centerY - 2, 3, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.type === 3) { 
-            // Robot A*: Visor horizontal cían/blanco
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(centerX - 8, centerY - 4, 16, 4);
-        } else if (this.type === 4) { 
-            // Hunter (Predictivo): Cuernos/triángulos y ojos amenazantes
-            ctx.fillStyle = '#ff6b35';
-            ctx.beginPath();
-            ctx.moveTo(centerX - 8, centerY - 8);
-            ctx.lineTo(centerX - 4, centerY - 14);
-            ctx.lineTo(centerX - 2, centerY - 8);
-            ctx.moveTo(centerX + 8, centerY - 8);
-            ctx.lineTo(centerX + 4, centerY - 14);
-            ctx.lineTo(centerX + 2, centerY - 8);
-            ctx.fill();
+            if (this.type === 1) { 
+                const eyeOffset = (Math.floor(this.animFrame / 15) % 2 === 0) ? 1 : 0;
+                ctx.beginPath();
+                ctx.arc(centerX - 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
+                ctx.arc(centerX + 5, centerY - 3 + eyeOffset, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.type === 2) { 
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - 2, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.type === 3) { 
+                ctx.fillRect(centerX - 8, centerY - 4, 16, 4);
+            } else if (this.type === 4) { 
+                ctx.fillStyle = '#ff6b35';
+                ctx.beginPath();
+                ctx.moveTo(centerX - 8, centerY - 8);
+                ctx.lineTo(centerX - 4, centerY - 14);
+                ctx.lineTo(centerX - 2, centerY - 8);
+                ctx.moveTo(centerX + 8, centerY - 8);
+                ctx.lineTo(centerX + 4, centerY - 14);
+                ctx.lineTo(centerX + 2, centerY - 8);
+                ctx.fill();
 
-            ctx.fillStyle = '#ffff00';
-            ctx.beginPath();
-            ctx.arc(centerX - 4, centerY - 2, 2.5, 0, Math.PI * 2);
-            ctx.arc(centerX + 4, centerY - 2, 2.5, 0, Math.PI * 2);
-            ctx.fill();
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(centerX - 4, centerY - 2, 2.5, 0, Math.PI * 2);
+                ctx.arc(centerX + 4, centerY - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 10px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.type, centerX, centerY + 10);
         }
-
-        // Número distintivo en la parte inferior
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.type, centerX, centerY + 10);
     }
 }
