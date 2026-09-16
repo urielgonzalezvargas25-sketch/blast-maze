@@ -6,11 +6,18 @@ class Bomb {
         this.tileSize = tileSize;
         this.board = board;
         this.game = game;
+
+        // Calculo de posicion en pixeles para el Canvas
+        this.x = c * tileSize;
+        this.y = r * tileSize;
+
         this.timer = 180; // ~3 segundos de mecha (60 FPS)
+        this.animFrame = 0;
         this.exploded = false;
     }
 
     update() {
+        this.animFrame++;
         this.timer--;
         if (this.timer <= 0 && !this.exploded) {
             this.explode();
@@ -20,19 +27,27 @@ class Bomb {
     explode() {
         if (this.exploded) return;
         this.exploded = true;
-        this.game.triggerExplosion(this.r, this.c, this.range);
+        if (this.game && typeof this.game.triggerExplosion === 'function') {
+            this.game.triggerExplosion(this.r, this.c, this.range);
+        }
     }
 
     draw(ctx) {
-        const centerX = this.c * this.tileSize + this.tileSize / 2;
-        const centerY = this.r * this.tileSize + this.tileSize / 2;
+        if (this.exploded) return;
 
-        ctx.fillStyle = (Math.floor(this.timer / 10) % 2 === 0) ? '#ff3333' : '#ff9900';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, this.tileSize * 0.35, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        const img = window.assetsManager ? window.assetsManager.get('bomb') : null;
+
+        if (img) {
+            ctx.drawImage(img, this.x, this.y, this.tileSize, this.tileSize);
+        } else {
+            const centerX = this.x + this.tileSize / 2;
+            const centerY = this.y + this.tileSize / 2;
+            const radius = this.tileSize * 0.35;
+
+            ctx.fillStyle = (Math.floor(this.animFrame / 10) % 2 === 0) ? '#111111' : '#e63946';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }

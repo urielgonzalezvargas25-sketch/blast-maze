@@ -4,9 +4,9 @@ class AssetsManager {
         this.loadedCount = 0;
         this.totalImages = 0;
 
-        // Solo se registra únicamente la imagen que modificaste
         this.sources = {
-            enemy4: 'assets/images/enemy4.png'
+            enemy4: 'assets/images/enemy4.png',
+            bomb: 'assets/images/bomba.png'
         };
     }
 
