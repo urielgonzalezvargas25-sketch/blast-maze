@@ -15,19 +15,21 @@ class Enemy {
         this.path = [];
         this.alive = true;
         this.animFrame = 0;
+        
+        // Control de dirección para el Enemigo 4
+        this.facingDir = { x: 0, y: 1 }; // Abajo por defecto
+        this.isMoving = false;
 
         this.colors = {
-            1: '#ff007f', // Magenta (Fantasma Aleatorio)
-            2: '#8a2be2', // Morado (Cíclope BFS)
-            3: '#00f5d4', // Cían (Robot A*)
-            4: '#ff6b35'  // Naranja (Hunter Predictivo)
+            1: '#ff007f', 
+            2: '#8a2be2', 
+            3: '#00f5d4', 
+            4: '#ff6b35'  
         };
     }
 
     update() {
         if (!this.alive) return;
-
-        this.animFrame++;
 
         if (this.x === this.targetC * this.tileSize && this.y === this.targetR * this.tileSize) {
             this.r = this.targetR;
@@ -38,6 +40,19 @@ class Enemy {
         const destX = this.targetC * this.tileSize;
         const destY = this.targetR * this.tileSize;
 
+        this.isMoving = (this.x !== destX || this.y !== destY);
+
+        if (this.isMoving) {
+            this.animFrame++;
+            // Detectar la dirección exacta hacia la que camina la IA
+            if (this.x < destX) this.facingDir = { x: 1, y: 0 };      // Derecha
+            else if (this.x > destX) this.facingDir = { x: -1, y: 0 }; // Izquierda
+            else if (this.y < destY) this.facingDir = { x: 0, y: 1 };  // Abajo
+            else if (this.y > destY) this.facingDir = { x: 0, y: -1 }; // Arriba
+        } else {
+            this.animFrame = 0;
+        }
+
         if (this.x < destX) this.x = Math.min(this.x + this.speed, destX);
         if (this.x > destX) this.x = Math.max(this.x - this.speed, destX);
         if (this.y < destY) this.y = Math.min(this.y + this.speed, destY);
@@ -45,158 +60,64 @@ class Enemy {
     }
 
     chooseNextMove() {
-        const playerR = Math.floor((this.game.player.y + this.tileSize / 2) / this.tileSize);
-        const playerC = Math.floor((this.game.player.x + this.tileSize / 2) / this.tileSize);
+        const directions = [
+            { r: -1, c: 0 }, { r: 1, c: 0 },
+            { r: 0, c: -1 }, { r: 0, c: 1 }
+        ];
 
-        if (this.type === 1) {
-            const neighbors = this.getValidNeighbors(this.r, this.c);
-            if (neighbors.length > 0) {
-                const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                this.targetR = next.r;
-                this.targetC = next.c;
-            }
-        } else if (this.type === 2) {
-            this.path = this.findPathBFS(this.r, this.c, playerR, playerC);
-            if (this.path.length > 1) {
-                this.targetR = this.path[1].r;
-                this.targetC = this.path[1].c;
-            }
-        } else if (this.type === 3) {
-            this.path = this.findPathAStar(this.r, this.c, playerR, playerC);
-            if (this.path.length > 1) {
-                this.targetR = this.path[1].r;
-                this.targetC = this.path[1].c;
-            }
-        } else if (this.type === 4) {
-            let predR = playerR;
-            let predC = playerC;
-            if (this.game.player.keys['ArrowUp'] || this.game.player.keys['w']) predR -= 3;
-            if (this.game.player.keys['ArrowDown'] || this.game.player.keys['s']) predR += 3;
-            if (this.game.player.keys['ArrowLeft'] || this.game.player.keys['a']) predC -= 3;
-            if (this.game.player.keys['ArrowRight'] || this.game.player.keys['d']) predC += 3;
-
-            predR = Math.max(1, Math.min(this.board.rows - 2, predR));
-            predC = Math.max(1, Math.min(this.board.cols - 2, predC));
-
-            this.path = this.findPathAStar(this.r, this.c, predR, predC);
-            if (this.path.length > 1) {
-                this.targetR = this.path[1].r;
-                this.targetC = this.path[1].c;
-            } else {
-                this.path = this.findPathAStar(this.r, this.c, playerR, playerC);
-                if (this.path.length > 1) {
-                    this.targetR = this.path[1].r;
-                    this.targetC = this.path[1].c;
-                }
-            }
-        }
-    }
-
-    getValidNeighbors(r, c) {
-        const dirs = [{ r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }];
-        let valid = [];
-        for (let d of dirs) {
-            let nr = r + d.r;
-            let nc = c + d.c;
-            if (this.board.grid[nr] && this.board.grid[nr][nc] === 0) {
-                valid.push({ r: nr, c: nc });
-            }
-        }
-        return valid;
-    }
-
-    findPathBFS(startR, startC, targetR, targetC) {
-        let queue = [[{ r: startR, c: startC }]];
-        let visited = Array.from({ length: this.board.rows }, () => Array(this.board.cols).fill(false));
-        visited[startR][startC] = true;
-
-        while (queue.length > 0) {
-            let path = queue.shift();
-            let curr = path[path.length - 1];
-
-            if (curr.r === targetR && curr.c === targetC) return path;
-
-            for (let n of this.getValidNeighbors(curr.r, curr.c)) {
-                if (!visited[n.r][n.c]) {
-                    visited[n.r][n.c] = true;
-                    queue.push([...path, n]);
-                }
-            }
-        }
-        return [];
-    }
-
-    findPathAStar(startR, startC, targetR, targetC) {
-        let openSet = [{ r: startR, c: startC, g: 0, h: 0, f: 0, parent: null }];
-        let closedSet = [];
-
-        const heuristic = (r1, c1, r2, c2) => Math.abs(r1 - r2) + Math.abs(c1 - c2);
-
-        while (openSet.length > 0) {
-            openSet.sort((a, b) => a.f - b.f);
-            let current = openSet.shift();
-
-            if (current.r === targetR && current.c === targetC) {
-                let path = [];
-                let temp = current;
-                while (temp) {
-                    path.push({ r: temp.r, c: temp.c });
-                    temp = temp.parent;
-                }
-                return path.reverse();
-            }
-
-            closedSet.push(current);
-
-            for (let n of this.getValidNeighbors(current.r, current.c)) {
-                if (closedSet.some(c => c.r === n.r && c.c === n.c)) continue;
-
-                let g = current.g + 1;
-                let h = heuristic(n.r, n.c, targetR, targetC);
-                let f = g + h;
-
-                let openNode = openSet.find(o => o.r === n.r && o.c === n.c);
-                if (!openNode) {
-                    openSet.push({ r: n.r, c: n.c, g, h, f, parent: current });
-                } else if (g < openNode.g) {
-                    openNode.g = g;
-                    openNode.f = f;
-                    openNode.parent = current;
-                }
-            }
-        }
-        return [];
-    }
-
-    drawDebugPath(ctx) {
-        if (!this.alive || !this.path || this.path.length < 2) return;
-
-        ctx.strokeStyle = this.colors[this.type];
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        for (let i = 0; i < this.path.length; i++) {
-            const px = this.path[i].c * this.tileSize + this.tileSize / 2;
-            const py = this.path[i].r * this.tileSize + this.tileSize / 2;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-
-        this.path.forEach(p => {
-            ctx.fillStyle = this.colors[this.type];
-            ctx.beginPath();
-            ctx.arc(p.c * this.tileSize + this.tileSize / 2, p.r * this.tileSize + this.tileSize / 2, 4, 0, Math.PI * 2);
-            ctx.fill();
+        const validMoves = directions.filter(d => {
+            const nr = this.r + d.r;
+            const nc = this.c + d.c;
+            return this.board.grid[nr] && this.board.grid[nr][nc] === 0;
         });
+
+        if (validMoves.length > 0) {
+            const move = validMoves[Math.floor(Math.random() * validMoves.length)];
+            this.targetR = this.r + move.r;
+            this.targetC = this.c + move.c;
+        }
     }
 
     draw(ctx) {
         if (!this.alive) return;
 
-        // Define cuántos fotogramas tiene cada tipo de enemigo (Tipo 2 = 5 cuadros, Tipo 1 u otros = 6 cuadros)
-        // Define cuántos fotogramas tiene cada tipo de enemigo (Tipos 2 y 3 usan 5 cuadros; Tipo 1 usa 6)
-const maxFrames = (this.type === 2 || this.type === 3) ? 5 : 6;
-        const frameIndex = (Math.floor(this.animFrame / 15) % maxFrames) + 1;
+        // Renderizado dinámico por Spritesheet para el Enemigo 4 (6 columnas x 4 filas)
+        if (this.type === 4 && window.assetsManager) {
+            const img = window.assetsManager.get('enemy4');
+
+            if (img) {
+                const totalCols = 6; 
+                const totalRows = 4; 
+
+                const frameWidth = img.width / totalCols;
+                const frameHeight = img.height / totalRows;
+
+                let row = 0; 
+                let col = 0; 
+
+                if (this.isMoving) {
+                    if (this.facingDir.x === -1) row = 2;      // Izquierda
+                    else if (this.facingDir.x === 1) row = 3;  // Derecha
+                    else if (this.facingDir.y === -1) row = 1; // Arriba
+                    else if (this.facingDir.y === 1) row = 0;  // Abajo
+
+                    col = Math.floor(this.animFrame / 12) % totalCols;
+                } else {
+                    col = 0; 
+                }
+
+                ctx.drawImage(
+                    img,
+                    col * frameWidth, row * frameHeight, frameWidth, frameHeight,
+                    this.x, this.y, this.tileSize, this.tileSize
+                );
+                return;
+            }
+        }
+
+        // Animación por imágenes individuales para Enemigos 1, 2 y 3
+        const maxFrames = (this.type === 2 || this.type === 3) ? 5 : 6;
+        const frameIndex = (Math.floor(this.animFrame / 16) % maxFrames) + 1;
         
         const imgKey = `enemy${this.type}_${frameIndex}`;
         const fallbackKey = `enemy${this.type}`;
@@ -217,10 +138,6 @@ const maxFrames = (this.type === 2 || this.type === 3) ? 5 : 6;
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 10px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.type, centerX, centerY + 10);
-        }
+        } 
     }
 }

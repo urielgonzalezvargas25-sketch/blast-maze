@@ -9,7 +9,7 @@ class AssetsManager {
             bomb1: 'assets/images/bomba.png',
             bomb2: 'assets/images/bomba2.png',
             bomb3: 'assets/images/bomba3.png',
-            enemy4: 'assets/images/enemy4.png',
+            enemy4: 'assets/images/enemy4_spritesheet.png',
             
             enemy1_1: 'assets/images/enemy1_1.png',
             enemy1_2: 'assets/images/enemy1_2.png',
@@ -29,6 +29,8 @@ class AssetsManager {
             enemy3_3: 'assets/images/enemy3_3.png',
             enemy3_4: 'assets/images/enemy3_4.png',
             enemy3_5: 'assets/images/enemy3_5.png',
+
+            
         };
     }
 
